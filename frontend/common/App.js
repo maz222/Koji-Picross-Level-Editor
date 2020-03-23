@@ -2,40 +2,40 @@ import React from 'react';
 import styled, { keyframes } from 'styled-components';
 import Koji from '@withkoji/vcc';
 import CustomVCC from '@withkoji/custom-vcc-sdk';
-
 import {GridBar,CellBar} from './TopBar.js';
 
-const DEFAULT_ROWS = 10;
-const DEFAULT_COLS = 10;
+const DEFAULT_ROWS = 3;
+const DEFAULT_COLS = 3;
 
-let GridCell = styled.div`
-    background-color:rgb(100,100,100);
-    width:8vw;
-    max-width:50px;
-    height:8vw;
-    max-height:50px;
+let EmptyCell = styled.div`
+	background-color:rgb(240,240,240);
+    width:100%;
+    height:100%;
+	&:hover {
+		background-color:rgb(60,60,60)
+	}
+`;
+
+let FilledCell = styled.div`
+	background-color:rgb(20,20,20);
+    width:100%;
+    height:100%;
+    &:hover {
+		background-color:rgb(210,210,210)
+	}
+`;
+
+let SectionTag = styled.h2`
+	background-color:rgb(255,255,255);
+    width:1em;
+    height:1em;
+	padding:4px;
     display:flex;
     justify-content:center;
     align-items:center;
-    &:hover {
-        background-color:rgb(60,60,60);
-    }
+    margin:0;
+    font-size:.75em;
 `;
-
-let CellImage = styled.img`
-    width:7vw;
-    max-width:30px;
-    height:7vw;
-    max-height:30px;
-`;
-
-const IMAGES = [
-    null,
-    Koji.config.images.spawn,
-    Koji.config.images.coin,
-    Koji.config.images.wall,
-    Koji.config.images.end
-];
 
 class App extends React.Component {
     constructor(props) {
@@ -45,14 +45,11 @@ class App extends React.Component {
         for(var i=0;i<DEFAULT_ROWS;i++) {
             level.push([]);
             for(var j=0;j<DEFAULT_COLS;j++) {
-                level[i].push(0);                
+                level[i].push(false);                
             }
         }
         this.state = {
-            level:level,
-            activeItem:0,
-            startCell:null,
-            exitCell:null,
+            level:level
         };
     }
 
@@ -61,28 +58,14 @@ class App extends React.Component {
         this.customVCC.onUpdate((newProps) => {
             if(newProps.value != "" && newProps.value != undefined) {
                 this.setState({level:newProps.value});
-                this.parseLevel(newProps.value);
             }
         })
-    }
-
-    parseLevel(level) {
-        for(var i=0;i<level.length; i++) {
-            for(var j=0; j<level[i].length; j++) {
-                if(level[i][j] == 1) {
-                    this.setState({startCell:[i,j]});
-                }
-                if(level[i][j] == 4) {
-                    this.setState({exitCell:[i,j]});
-                }
-            }
-        }
     }
 
     expandX() {
         let level = this.state.level;
         for(var i=0; i<level.length; i++) {
-            level[i].push(0);
+            level[i].push(false);
         }
         this.state = {level:level};
         this.forceUpdate();
@@ -109,7 +92,7 @@ class App extends React.Component {
         let level = this.state.level;
         let t = [];
         for(var i=0;i<level[0].length;i++) {
-            t.push(0);
+            t.push(false);
         }
         level.push(t);
         this.state = {level:level};
@@ -131,39 +114,110 @@ class App extends React.Component {
         this.customVCC.save();
     }
 
-    resetCell(row,col) {
-        //reset spawn
-        if(this.state.level[row][col] == 1) {
-            this.setState({startCell:null});
-        }
-        //reset goal
-        if(this.state.level[row][col] == 4) {
-            this.setState({exitCell:null});
-        }
-        this.state.level[row][col] = 0;
-    }
-
-    setCell(row,col,value) {
-        this.resetCell(row,col);
-        //set spawn
-        if(value == 1) {
-            if(this.state.startCell != null) {
-                this.resetCell(this.state.startCell[0],this.state.startCell[1]);
-            }
-            this.setState({startCell:[row,col]});
-        }
-        //set goal
-        if(value == 4) {
-            if(this.state.exitCell != null) {
-                this.resetCell(this.state.exitCell[0],this.state.exitCell[1]);
-            }
-            this.setState({exitCell:[row,col]});
-        }
-        this.state.level[row][col] = value;
+    toggleCell(row,col) {
+        console.log("toggle");
+        console.log([row,col]);
+        this.state.level[row][col] = !this.state.level[row][col];
         this.forceUpdate();
         this.customVCC.change(this.state.level);
         this.customVCC.save();
     }
+
+    parseSection(cellList) {
+    	let counts = [];
+    	let cellCount = 0;
+    	for(var c in cellList) {
+    		if(cellList[c]) {
+    			cellCount += 1;
+    		}
+    		else {
+    			if(cellCount > 0) {
+    				counts.push(cellCount);
+    				cellCount = 0;
+    			}
+    		}
+    	}
+    	if(cellCount > 0) {
+    		counts.push(cellCount);
+    	}
+    	return counts.length > 0 ? counts : [0];
+    }
+
+    getColumn(matrix,columnIndex) {
+    	return matrix.map(x => x[columnIndex]);
+    }
+
+    getMaxLabels() {
+    	let maxRows = 0;
+        let maxCols = 0;
+    	for(var i=0;i<this.state.level.length;i++) {
+    		maxRows=Math.max(this.parseSection(this.state.level[i]).length,maxRows);
+    		maxCols=Math.max(this.parseSection(this.getColumn(this.state.level,i)).length,maxCols);
+    	}
+    	return [maxRows,maxCols];
+    }
+
+    renderGrid() {
+        let sizes = this.getMaxLabels();
+        let maxColHeight = sizes[1];
+        let maxRowWidth = sizes[0];
+
+        let gridSize = Math.max(sizes[0]+this.state.level[0].length,sizes[1]+this.state.level.length);
+        gridSize = gridSize%2==0 ? gridSize: gridSize+1;
+
+        let xOffset = (gridSize-maxRowWidth-this.state.level[0].length)/2;
+        console.log([gridSize,maxRowWidth]);
+        console.log(xOffset);
+        return(this.state.level.map((row,rowIndex) => {
+            let tags = this.parseSection(this.state.level[this.state.level.length-rowIndex-1]).reverse();
+            return(
+                //row tags
+                tags.map((tag,tagIndex) => {
+                    let colStart = maxRowWidth-tagIndex-1;
+                    let rowStart = maxColHeight+this.state.level.length-rowIndex-1;
+                    let gridStyle = {
+                        gridColumnStart:colStart,
+                        gridColumnEnd:colStart+1,
+                        gridRowStart:rowStart,
+                        gridRowEnd:rowStart+1
+                    };
+                    return(<SectionTag style={gridStyle}>{tag}</SectionTag>);
+                }).concat(
+                    //grid
+                    row.map((isCellFilled,cellIndex) => {
+                        let colStart = maxRowWidth+cellIndex;
+                        let rowStart = maxColHeight+rowIndex;
+                        let gridStyle = {
+                            gridColumnStart:colStart,
+                            gridColumnEnd:colStart+1,
+                            gridRowStart:rowStart,
+                            gridRowEnd:rowStart+1
+                        };
+                        return(isCellFilled ? <FilledCell style={gridStyle} onClick={() => {this.toggleCell(rowIndex,cellIndex)}} /> : 
+                            <EmptyCell style={gridStyle} onClick={() => {this.toggleCell(rowIndex,cellIndex)}} />)
+                    })
+                )
+            );
+        }).concat(
+            //column tags
+            this.state.level[0].map((val,colIndex) => {
+                let tags = this.parseSection(this.getColumn(this.state.level,colIndex)).reverse();
+                return(
+                    tags.map((tag,tagIndex) => {
+                        let colStart = maxRowWidth+colIndex;
+                        let rowStart = maxColHeight-tagIndex-1;
+                        let gridStyle = {
+                            gridColumnStart:colStart,
+                            gridColumnEnd:colStart+1,
+                            gridRowStart:rowStart,
+                            gridRowEnd:rowStart+1
+                        };
+                        return(<SectionTag style={gridStyle}>{tag}</SectionTag>);
+                    })
+                );
+            })
+        ));
+    }    
 
     render() {
         let PageDiv = styled.div`
@@ -174,29 +228,26 @@ class App extends React.Component {
             align-items:center;
             justify-content:center;
             flex-direction:column;
-            background-color:rgb(240,240,240);
+            background-color:rgb(80,80,80);
         `;
+
+		let gridSizes = this.getMaxLabels();
+        let gridSize = Math.max(gridSizes[0]+this.state.level[0].length,gridSizes[1]+this.state.level.length);
+        gridSize = gridSize%2==0 ? gridSize: gridSize+1;
+		let Grid = styled.div`
+			display:grid;
+			margin:10px;
+			grid-template-columns:repeat(${gridSize-1}, 1fr);
+			grid-template-rows:repeat(${gridSize-1}, 1fr);
+		`;
+        console.log("---");
+        console.log(this.state.level);
         return (
             <PageDiv>
                 <GridBar expandY={() => {this.expandY()}} expandX={() => {this.expandX()}} shrinkX={() => {this.shrinkX()}} shrinkY={() => {this.shrinkY()}}/>
-                <CellBar activeButton={this.state.activeItem} update={(i) => {this.setState({activeItem:i})}}/>
-                <h3>{"Level must have a spawn and a goal!"}</h3>
-                <div style={{display:'flex',flexDirection:'column', margin:'10px 0 0 0'}}>
-                {
-                    this.state.level.map((row,rowIndex) => {
-                        return(
-                            <div style={{display:'flex'}}>
-                                {
-                                    row.map((cell,cellIndex) => {
-                                        let Image = <CellImage src={IMAGES[cell]} />;
-                                        return(<GridCell onClick={() => {this.setCell(rowIndex,cellIndex,this.state.activeItem);}}>{Image}</GridCell>);
-                                    })
-                                }
-                            </div>
-                        );
-                    })
-                }
-                </div>
+                <Grid>
+                {this.renderGrid()}
+                </Grid>
             </PageDiv>
         );
     }

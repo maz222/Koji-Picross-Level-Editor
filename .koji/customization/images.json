@@ -1,9 +1,6 @@
 {
   "images": {
-    "spawn": "https://images.koji-cdn.com/d4d2aab7-1847-481d-8aa6-6866d81d5e0f/y80bd-block.png",
-    "coin": "https://images.koji-cdn.com/d4d2aab7-1847-481d-8aa6-6866d81d5e0f/pe7id-slot1.png",
-    "wall": "https://images.koji-cdn.com/d4d2aab7-1847-481d-8aa6-6866d81d5e0f/mwo2t-bomb.png",
-    "end": "https://images.koji-cdn.com/d4d2aab7-1847-481d-8aa6-6866d81d5e0f/jben3-house3.png",
+
     "growX": "https://images.koji-cdn.com/d979b0cf-4071-400c-9b7a-6ce51f4952f8/tx5dx-ExpandX.png",
     "growY": "https://images.koji-cdn.com/d979b0cf-4071-400c-9b7a-6ce51f4952f8/lfwux-ExpandY.png",
     "shrinkX": "https://images.koji-cdn.com/d979b0cf-4071-400c-9b7a-6ce51f4952f8/gfm0v-ShrinkX.png",
@@ -16,26 +13,6 @@
       "icon": "🖼️",
       "source": "images.json",
       "fields": [
-        {
-          "key": "spawn",
-          "name": "Player Spawn Point",
-          "type": "image"
-        },
-        {
-          "key": "coin",
-          "name": "Coin",
-          "type": "image"
-        },
-        {
-          "key": "wall",
-          "name": "Wall",
-          "type": "image"
-        },
-        {
-          "key": "end",
-          "name": "End/Exit",
-          "type": "image"
-        },
         {
           "key": "growX",
           "name": "Expand Width",
