@@ -1,9 +1,4 @@
-# Simple React Scaffold
-
-Welcome to your new Koji React Project.
-
-# Where to go
-1. Your Frontend code is located at `/frontend`
-2. There are some simple customization options to help you learn how the VCCs work
-    - [Colors](#~/.koji/customization/colors.json!visual) - Change the text color, background color, & link text color.
-    - [Images](#~/.koji/customization/images.json!visual) - Change the spinning icon.
+# Picross Level Editor
+A level editor for my [Koji Picross Game](https://github.com/maz222/Koji-Picross-Game)
+Built into the main game, and allows users to easily create their own picross puzzles.
+Uses **React**, **JavaScript**
